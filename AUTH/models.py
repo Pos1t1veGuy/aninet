@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.utils import timezone
 from asgiref.sync import sync_to_async
+from django.utils import timezone as tz
 
 from django.conf import settings
 
@@ -37,7 +37,6 @@ class User(AbstractUser):
     avatar = models.ImageField(upload_to=ModelUtils.avatar_filename, default=settings.DEFAULT_AVATAR_URL, verbose_name='Avatar Picture')
     date_created = models.DateTimeField(default=tz.now, editable=False, verbose_name='Create Time')
     date_updated = models.DateTimeField(auto_now=True, verbose_name='Last Update')
-    watched = models.ManyToManyField('Dub', related_name='watched_by')
 
     def save(self, *args, **kwargs):
         if self.id:
@@ -46,7 +45,7 @@ class User(AbstractUser):
             if self.avatar and old_user.avatar != self.avatar and old_user.avatar.name != settings.DEFAULT_AVATAR_URL:
                 old_user.avatar.delete()
 
-        super(User, self).save(*args, **kwargs)
+        super('User', self).save(*args, **kwargs)
 
 
 class Message(models.Model):

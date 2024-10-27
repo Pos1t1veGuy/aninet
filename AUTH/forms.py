@@ -8,7 +8,7 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.core.cache import cache
 
-from email_validate import validate
+from email_validator import validate_email
 from PIL import Image
 from django.conf import settings
 
@@ -62,8 +62,10 @@ class RegisterForm(forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if not validate(email_address=email, check_blacklist=False, check_dns=False, check_smtp=False):
-            raise ValidationError('Неправильная почта')
+        try:
+            validate_email(email)
+        except EmailNotValidError as e:
+            raise ValidationError(f'Неправильная почта {e}')
         if User.objects.filter(email=email).exists():
             raise ValidationError('Эта почта уже используется')
         return email
