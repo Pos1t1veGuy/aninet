@@ -1,3 +1,7 @@
 from django.shortcuts import render
+from django.http import HttpResponse
 
-# Create your views here.
+def mailbox(request):
+	return HttpResponse('mailbox')
+def show_message(request):
+	return HttpResponse('show_message')

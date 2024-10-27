@@ -9,6 +9,6 @@ app_name = 'anime'
 urlpatterns = [
     path('', home, name='home'),
     path('anime/', animelist, name='animelist'),
-    path('anime/<str:anime_name>/', anime, name='anime'),
-    path('anime/<str:anime_name>/<int:episode>/', anime_episode, name='anime_episode'),
+    path('anime/<str:name>/', anime, name='anime'),
+    path('anime/<str:name>/<int:episode>/', anime_episode, name='anime_episode'),
 ]
