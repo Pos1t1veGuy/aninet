@@ -37,6 +37,7 @@ class User(AbstractUser):
     avatar = models.ImageField(upload_to=ModelUtils.avatar_filename, default=settings.DEFAULT_AVATAR_URL, verbose_name='Avatar Picture')
     date_created = models.DateTimeField(default=tz.now, editable=False, verbose_name='Create Time')
     date_updated = models.DateTimeField(auto_now=True, verbose_name='Last Update')
+    is_dark_theme = models.BooleanField(default=True, verbose_name='Default User Theme')
 
     def save(self, *args, **kwargs):
         if self.id:
