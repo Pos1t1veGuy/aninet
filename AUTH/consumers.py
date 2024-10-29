@@ -52,7 +52,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
                             },
                         }
                     )
-                    await sync_to_async(Message.objects.create)(author=self.user, content=data['content'], to=data['reply'])
+                    try:
+                        reply = None if not data['reply'] else await sync_to_async(User.objects.get)(username=data['reply'])
+                        await sync_to_async(Message.objects.create)(author=self.user, content=data['content'], to=reply)
+                    except AUTH.models.User.DoesNotExist:
+                        await self.send(text_data=json.dumps({
+                            'type': 'request error',
+                            'info': 'reply username dows not exists',
+                        }))
                 else:
                     await self.send(text_data=json.dumps({
                         'type': 'request error',

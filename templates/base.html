@@ -173,6 +173,10 @@
             transition: right 0.3s ease;
         }
 
+        .light-theme .chat-window {
+            background-color: #e8e8e8;
+        }
+
         .chat-window.show {
             right: 20px;
         }
@@ -260,12 +264,25 @@
         .chat-user {
             font-weight: bold;
             display: block;
+            color: var(--text-dark);
+        }
+
+        .light-theme .chat-user {
+            font-weight: bold;
+            display: block;
+            color: var(--text-light);
         }
 
         .chat-text {
             display: block;
             color: var(--text-dark);
             margin-top: 10px;
+        }
+
+        .light-theme .chat-text {
+            font-weight: bold;
+            display: block;
+            color: var(--text-light);
         }
 
         .reply-button {
@@ -287,10 +304,12 @@
         .light-theme .reply-button {
             background-color: var(--primary-color);
             color: var(--text-light);
+
         }
 
         .light-theme .reply-button:hover {
             background-color: var(--hover-bg-light);
+            color: var(--text-dark);
         }
 
         .message-group {
@@ -302,9 +321,9 @@
     <header>
         <div class="container">
             <div class="menu">
-                <a href="/">Главная</a>
-                <a href="/anime">Аниме</a>
-                <a href="/forum">Форум</a>
+                <a href="{% url 'anime:home' %}">Главная</a>
+                <a href="{% url 'anime:list' %}">Аниме</a>
+                <a href="{% url 'forum:questions' %}">Форум</a>
                 {% if user.is_superuser %}
                     <a href="{% url 'admin:index' %}">Админка</a>
                 {% endif %}
@@ -314,15 +333,15 @@
         <div class="container">
             {% if user.is_authenticated %}
                 <div class="user-info">
-                    <a href="/acc">
+                    <a href="{% url 'auth:info' %}">
                         <img src="{{ user.avatar.url }}" alt="Аватар">
                         <span style="margin-left: 20px; font-weight: normal;">@{{ user.username }}</span>
                     </a>
                 </div>
-                <a href="/logout" class="logout-button">Выйти</a>
+                <a href="{% url 'auth:logout' %}" class="logout-button">Выйти</a>
             {% else %}
                 <div class="user-info">
-                    <a href="/acc/auth">Войти</a>
+                    <a href="{% url 'auth:auth' %}">Войти</a>
                 </div>
             {% endif %}
         </div>
@@ -334,14 +353,14 @@
     <div class="chat-window" id="chat-window">
         <div class="chat-header">Чат</div>
         <div class="chat-messages" id="chat-messages">
-            <!-- Сообщения будут добавляться сюда -->
+            
         </div>
         <div class="chat-input">
             {% if user.is_authenticated %}
                 <input type="text" id="chat-input" placeholder="Введите сообщение...">
                 <button onclick="sendMessage()">Отправить</button>
             {% else %}
-                <p>Чтобы отправлять сообщения, требуется <a href="/acc/auth">авторизоваться</a></p>
+                <p>Чтобы отправлять сообщения, требуется <a href="{% url 'auth:auth' %}">авторизоваться</a></p>
             {% endif %}
         </div>
     </div>
@@ -359,6 +378,11 @@
         let lastAuthor = null
 
 
+        if ("{{ theme }}" === 'light') {
+            document.body.classList.add('light-theme')
+        }
+
+
         const toggleTheme = () => {
             const button = document.querySelector('.theme-toggle')
             const isDarkTheme = document.body.classList.toggle('light-theme')
@@ -368,19 +392,25 @@
             theme = new_theme
             
             {% if user.is_authenticated %}
-                fetch('/api/post/theme', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        type: 'set-default-theme',
-                        username: username,
-                        theme: theme,
-                    }),
-                })
+            fetch("{% url 'api:post_user_theme' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'type': 'set-default-theme',
+                    'username': username,
+                    'theme': theme,
+                }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             {% else %}
-                document.cookie = `theme=${new_theme}; path=/; max-age=31536000`
+            document.cookie = `theme=${new_theme}; path=/; max-age=31536000`
             {% endif %}
         }
 
@@ -388,22 +418,26 @@
             const chatWindow = document.getElementById('chat-window')
             if (chatWindow.classList.contains('show')) {
                 chatWindow.classList.remove('show')
+                const chatMessages = document.getElementById('chat-messages');
+                chatMessages.innerHTML = ''
+                if (ws_chat) {
+                    ws_chat.close()
+                    ws_chat = null
+                    replyToUser = null
+                    lastAuthor = null
+                }
             } else {
                 chatWindow.classList.add('show')
-            }
 
-            ws_chat = new WebSocket(ws_chat_path)
-
-            ws_chat.onclose = (event) => {
-                console.log('Reconnecting to chat...')
                 ws_chat = new WebSocket(ws_chat_path)
-            }
-            ws_chat.onmessage = (e) => {
-                const data = JSON.parse(e.data)
-                switch (data.type) {
-                    case 'message_sended':
-                        addMessage(data.avatar_url, data.author_username, data.message_content)
-                        break
+
+                ws_chat.onmessage = (e) => {
+                    const data = JSON.parse(e.data)
+                    switch (data.type) {
+                        case 'message_sended':
+                            addMessage(data.avatar_url, data.author_username, data.message_content)
+                            break
+                    }
                 }
             }
         }
@@ -411,10 +445,19 @@
         const addMessage = (avatar_url, author_username, content) => {
             if (content) {
                 const chatMessages = document.getElementById('chat-messages')
-                const messageElement = document.createElement('div')
-                messageElement.classList.add('chat-message')
 
-                if (author_username !== lastAuthor) {
+                if (author_username === lastAuthor && lastAuthor !== null) {
+                    const lastMessage = chatMessages.lastElementChild.querySelector('.chat-content')
+                    const lastDivs = lastMessage.querySelectorAll('div')
+                    const lastDiv = lastDivs[lastDivs.length - 1]
+
+                    const newMessageText = document.createElement('span')
+                    newMessageText.classList.add('chat-text')
+                    newMessageText.innerText = content
+                    lastDiv.appendChild(newMessageText)
+                } else {
+                    const messageElement = document.createElement('div')
+                    messageElement.classList.add('chat-message')
                     messageElement.innerHTML = `
                         <img src="${avatar_url}" alt="Аватар" class="chat-avatar">
                         <div class="chat-content">
@@ -427,19 +470,10 @@
                             </div>
                         </div>
                     `
-                } else {
-                    const lastMessage = chatMessages.lastElementChild.querySelector('.chat-content')
-                    const lastDivs = lastMessage.querySelectorAll('div')
-                    const lastDiv = lastDivs[lastDivs.length - 1]
-
-                    const newMessageText = document.createElement('span')
-                    newMessageText.classList.add('chat-text')
-                    newMessageText.innerText = content
-                    lastDiv.appendChild(newMessageText)
+                    chatMessages.appendChild(messageElement)
                 }
 
                 lastAuthor = author_username
-                chatMessages.appendChild(messageElement)
             }
         }
 
@@ -467,14 +501,16 @@
         const replyToMessage = (name) => {
             const input = document.getElementById('chat-input');
 
-            if (!input.value.startsWith(`${name}, `)) {
-                input.value = `${name}, ${input.value.trim()}`;
-            } else if (!input.value.startsWith(`${replyToUser}, `)) {
-                input.value = input.value.replace(`${replyToUser}, `, `${name}, `)
-            }
+            if (true) {
+                if (!input.value.startsWith(`${name}, `)) {
+                    input.value = `${name}, ${input.value.trim()}`;
+                } else if (!input.value.startsWith(`${replyToUser}, `)) {
+                    input.value = input.value.replace(`${replyToUser}, `, `${name}, `)
+                }
 
-            replyToUser = name
-            input.focus()
+                replyToUser = name
+                input.focus()
+            }
         }
 
         document.getElementById('chat-input').addEventListener('keydown', function(event) {

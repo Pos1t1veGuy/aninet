@@ -8,7 +8,7 @@ from .views import home, animelist, anime, anime_episode
 app_name = 'anime'
 urlpatterns = [
     path('', home, name='home'),
-    path('anime/', animelist, name='animelist'),
+    path('anime/', animelist, name='list'),
     path('anime/<str:name>/', anime, name='anime'),
     path('anime/<str:name>/<int:episode>/', anime_episode, name='anime_episode'),
 ]

@@ -44,7 +44,12 @@ class login_or_register(View):
             request.session['previous_path'] = '/'+'/'.join(request.META.get('HTTP_REFERER').split('/')[3:-1])
 
         type_ = request.GET.get('type', None)
-        return render(request, self.template_name, {'login_form': LoginForm(), 'register_form': RegisterForm(), 'reg': type_ == 'register'})
+        return render(request, self.template_name, {
+            'login_form': LoginForm(),
+            'register_form': RegisterForm(),
+            'reg': type_ == 'register',
+            'theme': 'dark' if request.user.is_dark_theme else 'light',
+        })
 
     @method_decorator(csrf_protect)
     def post(self, request):
@@ -64,6 +69,7 @@ class login_or_register(View):
                 'register_form': RegisterForm(),
                 'auth_error': 'Invalid login or password',
                 'reg': False,
+                'theme': 'dark' if request.user.is_dark_theme else 'light',
             })
         
         elif type_ == 'reg':
@@ -73,7 +79,12 @@ class login_or_register(View):
                 register_form.send_code(request.POST['email'])
                 return redirect('auth:code')
 
-            return render(request, self.template_name, {'login_form': LoginForm(), 'register_form': register_form, 'reg': True})
+            return render(request, self.template_name, {
+                'login_form': LoginForm(),
+                'register_form': register_form,
+                'reg': True,
+                'theme': 'dark' if request.user.is_dark_theme else 'light',
+            })
 
         else:
             raise Http404('Unknown operation type')
@@ -85,12 +96,16 @@ class edit(View):
             if request.META.get('HTTP_REFERER'):
                 request.session['previous_path'] = '/'+'/'.join(request.META.get('HTTP_REFERER').split('/')[3:-1])
 
-            return render(request, 'edit_profile.html', {'user': request.user, 'form': EditProfileForm(initial={
-                'username': request.user.username,
-                'first_name': request.user.first_name,
-                'last_name': request.user.last_name,
-                'email': request.user.email,
-            }, instance=request.user)})
+            return render(request, 'edit_profile.html', {
+                'user': request.user,
+                'theme': 'dark' if request.user.is_dark_theme else 'light',
+                'form': EditProfileForm(initial={
+                    'username': request.user.username,
+                    'first_name': request.user.first_name,
+                    'last_name': request.user.last_name,
+                    'email': request.user.email,
+                }, instance=request.user)
+            })
         except User.DoesNotExist:
             raise Http404('')
 
@@ -120,7 +135,11 @@ class edit(View):
                 return redirect_back(request, reverse('auth:edit_profile'))
 
         else:
-            return render(request, 'edit_profile.html', {'user': request.user, 'form': ep_form})
+            return render(request, 'edit_profile.html', {
+                'user': request.user,
+                'form': ep_form,
+                'theme': 'dark' if request.user.is_dark_theme else 'light'
+            })
 
 
 class code(View):
@@ -130,7 +149,7 @@ class code(View):
             if request.session['previous_path'] == reverse('auth:auth'):
                 request.session['previous_path'] = reverse('anime:home')
         try:
-            return render(request, 'code_required.html', {'user': request.user})
+            return render(request, 'code_required.html', {'user': request.user, 'theme': 'dark' if request.user.is_dark_theme else 'light'})
         except User.DoesNotExist:
             raise Http404('')
 
@@ -181,6 +200,10 @@ def logout_view(request):
 
 def account_info(request, account_username: str):
     try:
-        return render(request, 'account_info.html', {'user': request.user, 'account': User.objects.get(username=account_username)})
+        return render(request, 'account_info.html', {
+            'user': request.user,
+            'account': User.objects.get(username=account_username),
+            'theme': 'dark' if request.user.is_dark_theme else 'light'
+        })
     except User.DoesNotExist:
         raise Http404('')

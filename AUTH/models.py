@@ -53,7 +53,7 @@ class Message(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages', verbose_name='Author')
     content = models.CharField(max_length=300)
     date_sent = models.DateTimeField(default=tz.now, editable=False, verbose_name='Create Time')
-    to = models.CharField(max_length=settings.MAX_USERNAME_LENGTH, default=None, null=True)
+    to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='replies', max_length=settings.MAX_USERNAME_LENGTH, default=None, null=True, verbose_name='Replies')
 
     def __str__(self):
         return f'Message(from="{self.author.username}", content="{self.content}", date_sent={self.date_sent})'
