@@ -24,16 +24,16 @@ import os
 def redirect_back(request, excluding_url: str = None):
     if 'previous_path' in request.session.keys():
         try:
-            banned_urls = [reverse('chess:hello'), '', reverse('auth:code'), reverse('auth:auth'), excluding_url]
+            banned_urls = ['', reverse('auth:code'), reverse('auth:auth'), excluding_url]
             if request.session['previous_path'] in banned_urls or request.session['previous_path'] + '/' in banned_urls:
-                return redirect('chess:home')
+                return redirect('anime:home')
 
             return redirect(request.session['previous_path'])
 
         except Resolver404:
             pass
 
-    return redirect('chess:home')
+    return redirect('anime:home')
 
 
 class login_or_register(View):
@@ -128,7 +128,7 @@ class code(View):
         if request.META.get('HTTP_REFERER'):
             request.session['previous_path'] = '/'+'/'.join(request.META.get('HTTP_REFERER').split('/')[3:-1])
             if request.session['previous_path'] == reverse('auth:auth'):
-                request.session['previous_path'] = reverse('chess:home')
+                request.session['previous_path'] = reverse('anime:home')
         try:
             return render(request, 'code_required.html', {'user': request.user})
         except User.DoesNotExist:
@@ -177,7 +177,7 @@ def info(request):
 @login_required(login_url='auth:auth')
 def logout_view(request):
     logout(request)
-    return redirect('chess:home')
+    return redirect('anime:home')
 
 def account_info(request, account_username: str):
     try:

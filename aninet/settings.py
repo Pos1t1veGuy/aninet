@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'api',
     'anime',
     'AUTH',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -72,6 +74,7 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'aninet.asgi.application'
 WSGI_APPLICATION = 'aninet.wsgi.application'
 
 
@@ -85,6 +88,20 @@ DATABASES = {
     }
 }
 
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": [("127.0.0.1", 6379)],
+#         },
+#     },
+# }
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -127,23 +144,24 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+MIN_CHAT_MSGS_LOAD = 100
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-AVATARS_URL = f'{MEDIA_URL}avatars/'
+AVATARS_URL = '/avatars/'
 AVATARS_ROOT = os.path.join(MEDIA_ROOT, 'avatars')
-PREVIEWS_URL = f'{MEDIA_URL}previews/'
+PREVIEWS_URL = '/previews/'
 PREVIEWS_ROOT = os.path.join(MEDIA_ROOT, 'previews')
-VIDEOS_URL = f'{MEDIA_URL}videos/'
+VIDEOS_URL = '/videos/'
 VIDEOS_ROOT = os.path.join(MEDIA_ROOT, 'videos')
 
 DEFAULT_AVATAR_NAME = 'default_user.png'
-DEFAULT_AVATAR_URL = f'{AVATARS_URL}/{DEFAULT_AVATAR_NAME}'
+DEFAULT_AVATAR_URL = f'{AVATARS_URL}{DEFAULT_AVATAR_NAME}'
 DEFAULT_AVATAR_ROOT = os.path.join(AVATARS_ROOT, DEFAULT_AVATAR_NAME)
 
 AUTH_USER_MODEL = 'AUTH.User'
 ENABLED_USERNAME_CHARS = string.ascii_letters + string.digits + '_-'
-ENABLED_PASSWORD_CHARS = string.ascii_letters + string.digits
 PASSWORD_MIN_LENGTH = 8
 MAX_AVATAR_SIZE = 4 # MB
 MAX_USERNAME_LENGTH = 45

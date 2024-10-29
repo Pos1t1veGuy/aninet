@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aninet</title>
+    <style>
+        :root {
+            --background-light: #ffffff;
+            --background-dark: #2b2b2b;
+            --text-light: #000000;
+            --text-dark: #ffffff;
+            --primary-color: #6200ea;
+            --hover-bg-light: #8730ff;
+            --hover-bg-dark: #4a00b0;
+            --font-size-normal: 1em;
+            --font-size-large: 1.2em;
+            --header-size: 60px;
+            --chat-width: 400px;
+        }
+
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+            margin: 0;
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+        }
+
+        .light-theme {
+            background-color: var(--background-light);
+            color: var(--text-light);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background-color: var(--primary-color);
+            height: var(--header-size);
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            user-select: none;
+        }
+
+        .menu {
+            display: flex;
+            height: 100%;
+        }
+
+        .menu a {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: var(--font-size-large);
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s;
+            height: var(--header-size);
+        }
+
+        .menu a:hover {
+            background-color: var(--hover-bg-dark);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: var(--header-size);
+        }
+
+        .user-info a {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: var(--font-size-large);
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s;
+            height: var(--header-size);
+        }
+
+        .user-info a:hover {
+            background-color: var(--hover-bg-dark);
+        }
+
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .user-info:hover img {
+            background-color: var(--hover-bg-dark);
+        }
+
+        .user-info span {
+            color: var(--text-dark);
+            font-weight: bold;
+        }
+
+        .logout-button {
+            background-color: var(--text-dark);
+            color: var(--background-dark);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, color 0.3s;
+            text-decoration: none;
+            margin-left: 30px;
+        }
+
+        .logout-button:hover {
+            background-color: var(--hover-bg-dark);
+        }
+
+        .light-theme .logout-button {
+            background-color: var(--text-light);
+            color: var(--background-light);
+        }
+
+        .light-theme .logout-button:hover {
+            background-color: var(--hover-bg-light);
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: var(--text-dark);
+            color: var(--background-dark);
+            border: none;
+            transition: background-color 0.3s, color 0.3s;
+            margin-left: 50px;
+        }
+
+        .light-theme .theme-toggle {
+            background-color: var(--text-light);
+            color: var(--background-light);
+        }
+
+        .light-theme .menu a:hover {
+            background-color: var(--hover-bg-light);
+        }
+
+        .light-theme .user-info:hover img {
+            background-color: var(--hover-bg-light);
+        }
+
+        .chat-window {
+            position: fixed;
+            right: -420px;
+            bottom: 80px;
+            width: var(--chat-width);
+            height: 500px;
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+            border: 1px solid var(--primary-color);
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            transition: right 0.3s ease;
+        }
+
+        .chat-window.show {
+            right: 20px;
+        }
+
+        .chat-header {
+            background-color: var(--primary-color);
+            padding: 10px;
+            color: var(--text-dark);
+            text-align: center;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            user-select: none;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .chat-input {
+            padding: 10px;
+            display: flex;
+            border-top: 1px solid #ccc;
+            user-select: none;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 5px;
+            border: none;
+            border-radius: 3px;
+        }
+
+        .chat-input button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: var(--text-dark);
+            margin-left: 5px;
+        }
+
+        #chat-toggle {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            cursor: pointer;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: var(--text-dark);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            user-select: none;
+        }
+
+        #chat-toggle:hover {
+            background-color: var(--hover-bg-dark);
+        }
+
+        .chat-message {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            margin-top: 10px;
+        }
+
+        .chat-content {
+            flex: 1;
+            margin-right: 10px;
+            margin-left: 15px;word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: calc(var(--chat-width) - 90px);
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            user-select: none;
+        }
+
+        .chat-user {
+            font-weight: bold;
+            display: block;
+        }
+
+        .chat-text {
+            display: block;
+            color: var(--text-dark);
+            margin-top: 10px;
+        }
+
+        .reply-button {
+            background-color: var(--primary-color);
+            color: var(--text-dark);
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.7em;
+            transition: background-color 0.3s;
+            margin-left: 10px;
+        }
+
+        .reply-button:hover {
+            background-color: var(--hover-bg-dark);
+        }
+
+        .light-theme .reply-button {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .light-theme .reply-button:hover {
+            background-color: var(--hover-bg-light);
+        }
+
+        .message-group {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="menu">
+                <a href="/">Главная</a>
+                <a href="/anime">Аниме</a>
+                <a href="/forum">Форум</a>
+                {% if user.is_superuser %}
+                    <a href="{% url 'admin:index' %}">Админка</a>
+                {% endif %}
+            </div>
+            <button class="theme-toggle" theme="dark" onclick="toggleTheme()">Тема</button>
+        </div>
+        <div class="container">
+            {% if user.is_authenticated %}
+                <div class="user-info">
+                    <a href="/acc">
+                        <img src="{{ user.avatar.url }}" alt="Аватар">
+                        <span style="margin-left: 20px; font-weight: normal;">@{{ user.username }}</span>
+                    </a>
+                </div>
+                <a href="/logout" class="logout-button">Выйти</a>
+            {% else %}
+                <div class="user-info">
+                    <a href="/acc/auth">Войти</a>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+    <div style="padding: 20px;">
+        {% block content %}{% endblock %}
+    </div>
+
+    <div class="chat-window" id="chat-window">
+        <div class="chat-header">Чат</div>
+        <div class="chat-messages" id="chat-messages">
+            <!-- Сообщения будут добавляться сюда -->
+        </div>
+        <div class="chat-input">
+            {% if user.is_authenticated %}
+                <input type="text" id="chat-input" placeholder="Введите сообщение...">
+                <button onclick="sendMessage()">Отправить</button>
+            {% else %}
+                <p>Чтобы отправлять сообщения, требуется <a href="/acc/auth">авторизоваться</a></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <button id="chat-toggle" onclick="toggleChat()">Чат</button>
+
+    <script>
+        let ws_chat = null
+        const username = "{{ user.username }}"
+        const avatar = "{{ user.avatar.url }}"
+        const ws_chat_path = 'ws://' + window.location.host + '/ws/chat/'
+        let theme = 'dark'
+
+        let replyToUser = null
+        let lastAuthor = null
+
+
+        const toggleTheme = () => {
+            const button = document.querySelector('.theme-toggle')
+            const isDarkTheme = document.body.classList.toggle('light-theme')
+            const old_theme = !isDarkTheme ? 'light' : 'dark'
+            const new_theme = isDarkTheme ? 'light' : 'dark'
+            button.setAttribute('theme', new_theme)
+            theme = new_theme
+            
+            {% if user.is_authenticated %}
+                fetch('/api/post/theme', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'set-default-theme',
+                        username: username,
+                        theme: theme,
+                    }),
+                })
+            {% else %}
+                document.cookie = `theme=${new_theme}; path=/; max-age=31536000`
+            {% endif %}
+        }
+
+        const toggleChat = () => {
+            const chatWindow = document.getElementById('chat-window')
+            if (chatWindow.classList.contains('show')) {
+                chatWindow.classList.remove('show')
+            } else {
+                chatWindow.classList.add('show')
+            }
+
+            ws_chat = new WebSocket(ws_chat_path)
+
+            ws_chat.onclose = (event) => {
+                console.log('Reconnecting to chat...')
+                ws_chat = new WebSocket(ws_chat_path)
+            }
+            ws_chat.onmessage = (e) => {
+                const data = JSON.parse(e.data)
+                switch (data.type) {
+                    case 'message_sended':
+                        addMessage(data.avatar_url, data.author_username, data.message_content)
+                        break
+                }
+            }
+        }
+
+        const addMessage = (avatar_url, author_username, content) => {
+            if (content) {
+                const chatMessages = document.getElementById('chat-messages')
+                const messageElement = document.createElement('div')
+                messageElement.classList.add('chat-message')
+
+                if (author_username !== lastAuthor) {
+                    messageElement.innerHTML = `
+                        <img src="${avatar_url}" alt="Аватар" class="chat-avatar">
+                        <div class="chat-content">
+                            <div>
+                                <span class="chat-user">@${author_username}</span>
+                                <button class="reply-button" onclick="replyToMessage('${author_username}')">Ответить</button>
+                            </div>
+                            <div class="message-group">
+                                <span class="chat-text">${content}</span>
+                            </div>
+                        </div>
+                    `
+                } else {
+                    const lastMessage = chatMessages.lastElementChild.querySelector('.chat-content')
+                    const lastDivs = lastMessage.querySelectorAll('div')
+                    const lastDiv = lastDivs[lastDivs.length - 1]
+
+                    const newMessageText = document.createElement('span')
+                    newMessageText.classList.add('chat-text')
+                    newMessageText.innerText = content
+                    lastDiv.appendChild(newMessageText)
+                }
+
+                lastAuthor = author_username
+                chatMessages.appendChild(messageElement)
+            }
+        }
+
+        const sendMessage = () => {
+            const chatMessages = document.getElementById('chat-messages')
+            const input = document.getElementById('chat-input')
+
+            if (input) {
+                ws_chat.send(JSON.stringify({
+                    'type': 'send_message',
+                    'reply': replyToUser,
+                    'content': input.value.trim(),
+                }))
+            }
+
+            input.value = ''
+            chatMessages.scrollTop = chatMessages.scrollHeight
+            replyToUser = null
+        }
+
+        const scroll_down = () => {
+            chatMessages.scrollTop = chatMessages.scrollHeight
+        }
+
+        const replyToMessage = (name) => {
+            const input = document.getElementById('chat-input');
+
+            if (!input.value.startsWith(`${name}, `)) {
+                input.value = `${name}, ${input.value.trim()}`;
+            } else if (!input.value.startsWith(`${replyToUser}, `)) {
+                input.value = input.value.replace(`${replyToUser}, `, `${name}, `)
+            }
+
+            replyToUser = name
+            input.focus()
+        }
+
+        document.getElementById('chat-input').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault()
+                sendMessage()
+            }
+        })
+
+        window.onload = () => {
+            const cookies = document.cookie.split('; ')
+            const themeCookie = cookies.find(row => row.startsWith('theme='))
+            
+            if (themeCookie) {
+                const theme = themeCookie.split('=')[1]
+                if (theme === 'light') {
+                    document.body.classList.add('light-theme')
+                    document.querySelector('.theme-toggle').setAttribute('data-theme', 'light')
+                }
+            }
+        }
+    </script>
+</body>
+</html>

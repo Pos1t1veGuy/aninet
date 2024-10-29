@@ -43,17 +43,17 @@ class User(AbstractUser):
         if self.id:
             old_user = User.objects.get(pk=self.id)
 
-            if self.avatar and old_user.avatar != self.avatar and old_user.avatar.name != settings.DEFAULT_AVATAR_URL:
+            if old_user.avatar.url != self.avatar.url and old_user.avatar.url != settings.DEFAULT_AVATAR_URL:
                 old_user.avatar.delete()
 
-        super('User', self).save(*args, **kwargs)
+        super(User, self).save(*args, **kwargs)
 
 
 class Message(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages', verbose_name='Author')
     content = models.CharField(max_length=300)
     date_sent = models.DateTimeField(default=tz.now, editable=False, verbose_name='Create Time')
-    to = models.CharField(max_length=settings.MAX_USERNAME_LENGTH, default='!all!')
+    to = models.CharField(max_length=settings.MAX_USERNAME_LENGTH, default=None, null=True)
 
     def __str__(self):
         return f'Message(from="{self.author.username}", content="{self.content}", date_sent={self.date_sent})'
