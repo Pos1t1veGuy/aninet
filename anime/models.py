@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 from django.utils import timezone as tz
+from django.utils.text import slugify
 from django.conf import settings
 
 from typing import *
@@ -34,9 +35,12 @@ class ModelUtils:
 
 
 class Anime(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    preview = models.ImageField(upload_to=ModelUtils.preview_filename, verbose_name='Preview')
+    rus_name = models.CharField(max_length=100, unique=True, default='')
+    eng_name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True, blank=True)
+    preview = models.ImageField(upload_to=ModelUtils.preview_filename, verbose_name='Preview', default=settings.DEFAULT_PREVIEWS_URL)
     release_date = models.DateTimeField(verbose_name='Create Time', default=tz.now)
+    released = models.BooleanField(verbose_name='Is Released', default=False)
     views = models.PositiveBigIntegerField(verbose_name='Views Count', default=0)
     about = models.TextField(verbose_name='About', default='')
     viewers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='anime_viewed', verbose_name='Viewers', blank=True)
@@ -48,19 +52,58 @@ class Anime(models.Model):
             if self.preview and old_user.preview != self.preview:
                 old_user.preview.delete()
 
+        self.slug = self.generate_slug()
+
         super(Anime, self).save(*args, **kwargs)
 
+    def generate_slug(self) -> str:
+        original_slug = slugify(self.eng_name)
+        slug = original_slug
+        counter = 1
+        while Anime.objects.filter(slug=slug).exists():
+            slug = f"{original_slug}-{counter}"
+            counter += 1
+        return slug
+
+    def get_episode(self, number: int) -> 'Episode':
+        episodes = self.episodes.all()
+        if 1 <= number <= episodes.count():
+            return episodes[number - 1]
+        return None
+
     def __str__(self):
-        return f'Anime(name={self.name}, release_date={self.release_date}, views={self.views})'
+        return f'Anime(eng_name={self.eng_name}, release_date={self.release_date}, views={self.views})'
+
+class Season(models.Model):
+    anime = models.ForeignKey(Anime, related_name='seasons', verbose_name='Anime', on_delete=models.CASCADE)
+    release_date = models.DateTimeField(verbose_name='Create Time', default=tz.now)
+    released = models.BooleanField(verbose_name='Is Released', default=False)
+    number = models.PositiveSmallIntegerField(default=1)
+
+    @property
+    def episodes_count(self) -> int:
+        return max([ ep.number for ep in self.episodes ])
+
+    @property
+    def last_episodes(self) -> List['Episode']:
+        return [ sorted(ep for ep in self.episodes.filter(number=num))[::-1][0] for num in range(1, self.episodes_count) ]
+
+    def add_episode(number: int = None, **kwargs):
+        Episode.objects.create(**kwargs, number=self.episodes_count+1)
+
+    def __str__(self):
+        return f'Season(anime={self.anime}, release_date={self.release_date}, number={self.number}, released={self.released})'
 
 class Episode(models.Model):
-    name = models.CharField(max_length=100)
-    anime = models.ForeignKey(Anime, related_name='episodes', verbose_name='Anime', on_delete=models.CASCADE)
+    eng_name = models.CharField(max_length=100)
+    rus_name = models.CharField(max_length=100)
+    season = models.ForeignKey(Season, related_name='episodes', verbose_name='Season', on_delete=models.CASCADE)
     preview = models.ImageField(upload_to=ModelUtils.preview_filename, verbose_name='Preview')
     release_date = models.DateTimeField(verbose_name='Create Time', default=tz.now)
     released = models.BooleanField(verbose_name='Is Released', default=False)
     views = models.PositiveBigIntegerField(verbose_name='Views Count', default=0)
     viewers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='episodes_viewed', verbose_name='Viewers', blank=True)
+    number = models.PositiveSmallIntegerField(default=1)
 
     def save(self, *args, **kwargs):
         if self.id:
@@ -72,7 +115,7 @@ class Episode(models.Model):
         super(Anime, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'Episode(name={self.name}, release_date={self.release_date}, views={self.views}, released={self.released})'
+        return f'Episode(eng_name={self.eng_name}, release_date={self.release_date}, views={self.views}, released={self.released})'
 
 class Dub(models.Model):
     author = models.CharField(max_length=100)

@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Главная</title>
+<title>Вопрос {{ q.title }}</title>
 {% endblock %}
 
 {% block content %}
-HOME
+QUESTION {{ q.title }}
 {% endblock %}

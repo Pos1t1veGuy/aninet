@@ -1,7 +1,7 @@
-from django.shortcuts import render
+from aninet.shortcuts import render
 from django.http import HttpResponse
 
 def mailbox(request):
-	return HttpResponse('mailbox')
+	return render(request, 'mailbox.html', {})
 def show_message(request, message_id: int):
-	return HttpResponse(f'show_message {message_id}')
+	return render(request, 'message.html', {})

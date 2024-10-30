@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Главная</title>
+<title>Сообщение {{ msg.title }}</title>
 {% endblock %}
 
 {% block content %}
-HOME
+MESSAGE {{ msg.title }}
 {% endblock %}

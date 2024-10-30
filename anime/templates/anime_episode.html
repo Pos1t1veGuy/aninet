@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>{% anime.rus_name %} сезон {% season.number %} серия {% episode.number %}</title>
+{% endblock %}
+
+{% block content %}
+ANIME {% anime.rus_name %}
+EPISODE {% episode.number %} {% episode.rus_name %}
+{% endblock %}
