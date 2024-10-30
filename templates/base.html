@@ -320,6 +320,24 @@
         .message-group {
             margin-bottom: 10px;
         }
+
+        .scroll-down {
+            position: absolute;
+            right: 20px;
+            bottom: 55px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: var(--text-dark);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            user-select: none;
+        }
+
+        .scroll-down:hover {
+            background-color: var(--hover-bg-dark);
+        }
     </style>
     {% block head %}{% endblock %}
 </head>
@@ -358,9 +376,8 @@
 
     <div class="chat-window" id="chat-window">
         <div class="chat-header">Чат</div>
-        <div class="chat-messages" id="chat-messages">
-            
-        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <button class="scroll-down" onclick="scroll_down()">Вниз</button>
         <div class="chat-input">
             {% if user.is_authenticated %}
                 <input type="text" id="chat-input" placeholder="Введите сообщение...">
@@ -506,7 +523,7 @@
                     chatMessages.removeChild(chatMessages.firstElementChild)
                 }
 
-
+                scroll_down()
                 lastAuthor = author_username
             }
         }
@@ -529,6 +546,7 @@
         }
 
         const scroll_down = () => {
+            const chatMessages = document.getElementById('chat-messages')
             chatMessages.scrollTop = chatMessages.scrollHeight
         }
 
