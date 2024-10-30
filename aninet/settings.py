@@ -162,6 +162,7 @@ DEFAULT_AVATAR_ROOT = os.path.join(AVATARS_ROOT, DEFAULT_AVATAR_NAME)
 
 AUTH_USER_MODEL = 'AUTH.User'
 ENABLED_USERNAME_CHARS = string.ascii_letters + string.digits + '_-'
+ENABLED_PASSWORD_CHARS = string.ascii_letters + string.digits
 PASSWORD_MIN_LENGTH = 8
 MAX_AVATAR_SIZE = 4 # MB
 MAX_USERNAME_LENGTH = 45

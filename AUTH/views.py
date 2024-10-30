@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
+from aninet.shortcuts import render
 from django.urls import reverse, resolve, Resolver404
 from django.http import HttpResponse, Http404
 
@@ -48,7 +49,6 @@ class login_or_register(View):
             'login_form': LoginForm(),
             'register_form': RegisterForm(),
             'reg': type_ == 'register',
-            'theme': 'dark' if request.user.is_dark_theme else 'light',
         })
 
     @method_decorator(csrf_protect)
@@ -69,9 +69,8 @@ class login_or_register(View):
                 'register_form': RegisterForm(),
                 'auth_error': 'Invalid login or password',
                 'reg': False,
-                'theme': 'dark' if request.user.is_dark_theme else 'light',
             })
-        
+    
         elif type_ == 'reg':
             register_form = RegisterForm(request.POST)
 
@@ -83,7 +82,6 @@ class login_or_register(View):
                 'login_form': LoginForm(),
                 'register_form': register_form,
                 'reg': True,
-                'theme': 'dark' if request.user.is_dark_theme else 'light',
             })
 
         else:
@@ -98,7 +96,6 @@ class edit(View):
 
             return render(request, 'edit_profile.html', {
                 'user': request.user,
-                'theme': 'dark' if request.user.is_dark_theme else 'light',
                 'form': EditProfileForm(initial={
                     'username': request.user.username,
                     'first_name': request.user.first_name,
@@ -138,7 +135,6 @@ class edit(View):
             return render(request, 'edit_profile.html', {
                 'user': request.user,
                 'form': ep_form,
-                'theme': 'dark' if request.user.is_dark_theme else 'light'
             })
 
 
@@ -149,7 +145,7 @@ class code(View):
             if request.session['previous_path'] == reverse('auth:auth'):
                 request.session['previous_path'] = reverse('anime:home')
         try:
-            return render(request, 'code_required.html', {'user': request.user, 'theme': 'dark' if request.user.is_dark_theme else 'light'})
+            return render(request, 'code_required.html')
         except User.DoesNotExist:
             raise Http404('')
 
@@ -157,10 +153,10 @@ class code(View):
     def post(self, request):
         code = request.POST.get('code')
         cache_data = cache.get(f'temp_code_{code}', None)
-        if cache_data:
-            if cache_data['type'] == 'form':
+        if isinstance(cache_data, dict):
+            if cache_data.get('type') == 'form':
                 form_module = import_module(cache_data['class_path'])
-                data = cache_data['form_data']
+                data = cache_data.get('form_data')
                 for key, value in data.items():
                     if isinstance(data[key], dict):
                         if list(data[key].keys())[0] == 'image':
@@ -172,7 +168,8 @@ class code(View):
                             data[key] = InMemoryUploadedFile(io, None, file, 'image/png', len(bytes_), None)
                             os.remove(settings.TEMP_MEDIA_DIR + file)
 
-                FormObject = getattr(form_module, cache_data['class_name'])(data=data, instance=request.user)
+                FormClass = getattr(form_module, cache_data['class_name'])
+                FormObject = FormClass(data)
 
                 if FormObject.is_valid():
                     res = FormObject.save()
@@ -185,6 +182,8 @@ class code(View):
                         return redirect(cache_data['redirect_after'])
 
                     return redirect_back(request)
+                else:
+                    raise Http404(FormObject.errors)
 
         raise Http404('')
 
@@ -200,10 +199,6 @@ def logout_view(request):
 
 def account_info(request, account_username: str):
     try:
-        return render(request, 'account_info.html', {
-            'user': request.user,
-            'account': User.objects.get(username=account_username),
-            'theme': 'dark' if request.user.is_dark_theme else 'light'
-        })
+        return render(request, 'account_info.html', {'account': User.objects.get(username=account_username)})
     except User.DoesNotExist:
         raise Http404('')

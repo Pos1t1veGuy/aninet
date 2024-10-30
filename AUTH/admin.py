@@ -7,4 +7,4 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ['content', 'author', 'date_sent', 'to']
+    list_display = ['content', 'author', 'created_at', 'to']

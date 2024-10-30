@@ -267,6 +267,12 @@
             color: var(--text-dark);
         }
 
+        .chat-time {
+            font-size: 0.85rem;
+            color: #888;
+            margin-left: 10px;
+        }
+
         .light-theme .chat-user {
             font-weight: bold;
             display: block;
@@ -418,14 +424,7 @@
             const chatWindow = document.getElementById('chat-window')
             if (chatWindow.classList.contains('show')) {
                 chatWindow.classList.remove('show')
-                const chatMessages = document.getElementById('chat-messages');
-                chatMessages.innerHTML = ''
-                if (ws_chat) {
-                    ws_chat.close()
-                    ws_chat = null
-                    replyToUser = null
-                    lastAuthor = null
-                }
+                clearChat()
             } else {
                 chatWindow.classList.add('show')
 
@@ -435,43 +434,78 @@
                     const data = JSON.parse(e.data)
                     switch (data.type) {
                         case 'message_sended':
-                            addMessage(data.avatar_url, data.author_username, data.message_content)
+                            console.log(data)
+                            addMessage(data.avatar_url, data.author_username, data.time, data.message_content)
                             break
                     }
+                }
+
+                ws_chat.onclose = (event) => {
+                    if (!event.wasClean) {
+                        clearChat()
+                        console.error(event)
+                        addMessage('', '', '', 'Чат временно не работает =(')
+                    }
+                    ws_chat = null
                 }
             }
         }
 
-        const addMessage = (avatar_url, author_username, content) => {
+        const clearChat = () => {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = ''
+            ws_chat = null
+            replyToUser = null
+            lastAuthor = null
+            if (ws_chat) {
+                ws_chat.close()
+            }
+        }
+
+        const addMessage = (avatar_url, author_username, time, content) => {
             if (content) {
                 const chatMessages = document.getElementById('chat-messages')
 
-                if (author_username === lastAuthor && lastAuthor !== null) {
-                    const lastMessage = chatMessages.lastElementChild.querySelector('.chat-content')
-                    const lastDivs = lastMessage.querySelectorAll('div')
-                    const lastDiv = lastDivs[lastDivs.length - 1]
-
-                    const newMessageText = document.createElement('span')
-                    newMessageText.classList.add('chat-text')
-                    newMessageText.innerText = content
-                    lastDiv.appendChild(newMessageText)
-                } else {
+                if (!avatar_url && !author_username && content) {
                     const messageElement = document.createElement('div')
                     messageElement.classList.add('chat-message')
-                    messageElement.innerHTML = `
-                        <img src="${avatar_url}" alt="Аватар" class="chat-avatar">
-                        <div class="chat-content">
-                            <div>
-                                <span class="chat-user">@${author_username}</span>
-                                <button class="reply-button" onclick="replyToMessage('${author_username}')">Ответить</button>
-                            </div>
-                            <div class="message-group">
-                                <span class="chat-text">${content}</span>
-                            </div>
-                        </div>
-                    `
+                    messageElement.innerHTML = `<div class="chat-content">${content}</div>`
                     chatMessages.appendChild(messageElement)
+
+                } else {
+                    if (author_username === lastAuthor && lastAuthor !== null) {
+                        const lastMessage = chatMessages.lastElementChild.querySelector('.chat-content')
+                        const lastDivs = lastMessage.querySelectorAll('div')
+                        const lastDiv = lastDivs[lastDivs.length - 1]
+
+                        const newMessageText = document.createElement('span')
+                        newMessageText.classList.add('chat-text')
+                        newMessageText.innerText = content
+                        lastDiv.appendChild(newMessageText)
+                    } else {
+                        const messageElement = document.createElement('div')
+                        messageElement.classList.add('chat-message')
+                        messageElement.innerHTML = `
+                            <img src="${avatar_url}" alt="Аватар" class="chat-avatar">
+                            <div class="chat-content">
+                                <div>
+                                    <span class="chat-user">@${author_username}</span>
+                                    <span class="chat-time">${time}</span>
+                                    <button class="reply-button" onclick="replyToMessage('${author_username}')">Ответить</button>
+                                </div>
+                                <div class="message-group">
+                                    <span class="chat-text">${content}</span>
+                                </div>
+                            </div>
+                        `
+                        chatMessages.appendChild(messageElement)
+                    }
                 }
+
+                while (chatMessages.children.length > 100) {
+                    chatMessages.removeChild(chatMessages.firstElementChild)
+                }
+
 
                 lastAuthor = author_username
             }
@@ -501,7 +535,7 @@
         const replyToMessage = (name) => {
             const input = document.getElementById('chat-input');
 
-            if (true) {
+            if (name !== username) {
                 if (!input.value.startsWith(`${name}, `)) {
                     input.value = `${name}, ${input.value.trim()}`;
                 } else if (!input.value.startsWith(`${replyToUser}, `)) {
