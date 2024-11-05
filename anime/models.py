@@ -44,6 +44,8 @@ class Anime(models.Model):
     views = models.PositiveBigIntegerField(verbose_name='Views Count', default=0)
     about = models.TextField(verbose_name='About', default='')
     viewers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='anime_viewed', verbose_name='Viewers', blank=True)
+    tags = models.ManyToManyField('Tag', related_name='animes', verbose_name='Tags', blank=True)
+    age_rating = models.PositiveSmallIntegerField(default=18, verbose_name='Age Rating')
 
     def save(self, *args, **kwargs):
         if self.id:
@@ -159,9 +161,7 @@ class Comment(models.Model):
         return f'Comment(author={self.author}, episode={self.episode.name}, episode.anime={self.episode.anime.name}, content={self.content}, date_sent={self.date_sent})'
 
 class Tag(models.Model):
-    user = models.CharField(max_length=100)
-    anime = models.ForeignKey(Anime, related_name='tags', verbose_name='Anime', on_delete=models.CASCADE)
     content = models.CharField(max_length=50)
 
     def __str__(self):
-        return f'Tag(user={self.user}, anime={self.anime.name}, content={self.content})'
+        return content

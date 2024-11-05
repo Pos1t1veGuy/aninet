@@ -2,9 +2,11 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 import json
 
 from AUTH.models import User
+from anime.models import Anime
 
 
 def get_mail_msgs(request):
@@ -14,7 +16,15 @@ def get_chat_msgs(request):
 def get_videos(request):
 	return HttpResponse('videos')
 def get_animes(request):
-	return HttpResponse('anime')
+	step = 0 if not str(request.GET.get('step')).isdigit() else int(request.GET.get('step'))
+	animes = Anime.objects.all()[settings.ANIME_LOAD_PACKET * step:settings.ANIME_LOAD_PACKET * (step+1)]
+	serialize = lambda anime, keys: {key:str(getattr(anime, key)) for key in keys}
+	return JsonResponse([{
+		**serialize(anime, ['rus_name', 'eng_name', 'slug', 'age_rating']),
+		'preview': f'{settings.MEDIA_URL}{anime.preview}',
+		'year': str(anime.release_date.year),
+		'tags': [str(tag) for tag in anime.tags.all()],
+	} for anime in animes], safe=False)
 
 @csrf_exempt
 def post_user_theme(request):

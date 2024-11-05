@@ -2,8 +2,69 @@
 
 {% block head %}
 <title>Каталог аниме</title>
+<style>
+  .anime-item {
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      padding: 10px;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-ANIME LIST
+<div id="anime-list"></div>
+
+<script>
+	let step = 0
+	const animeList = document.getElementById('anime-list')
+	const anime_load_packet = parseInt("{{ anime_load_packet }}")
+	let end = false
+
+	const loadAnimes = async () => {
+		console.log(1)
+		if (end) {
+			const last_response = await fetch(`/api/get/animes?step=${step-1}`)
+			const animes = await response.json()
+			if (animes.length < anime_load_packet) {
+				console.log('end')
+				return
+			}
+		}
+		const response = await fetch(`{% url "api:get_animes" %}?step=${step}`)
+
+
+		if (response.ok) {
+			const animes = await response.json()
+			if (animes.length > 0) {
+				animes.forEach(anime => {
+					const animeItem = document.createElement('div')
+					animeItem.className = 'anime-item'
+					tags = `<p>Теги: ${anime.tags.join(', ')}</p>`
+					animeItem.innerHTML = `
+						<a href="{% url 'anime:list' %}${anime.slug}">
+							<h3>${anime.rus_name}</h3>
+							<img src="${anime.preview}" alt="${anime.eng_name}" style="width:100px; height:auto;">
+							<p>Возрастной рейтинг: ${anime.age_rating}+</p>
+							<p>Год выпуска: ${anime.year}</p>${anime.tags.length > 0 ? tags : ''}
+						</a>
+					`
+					animeList.appendChild(animeItem)
+				})
+				step++
+				end = animes.length === anime_load_packet
+			} else {
+				console.log('end')
+			}
+		} else {
+		    console.error('Ошибка при загрузке:', response.statusText)
+		}
+	}
+
+	window.onscroll = () => {
+		if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+			loadAnimes()
+		}
+	}
+	loadAnimes()
+</script>
 {% endblock %}
