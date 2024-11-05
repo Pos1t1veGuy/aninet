@@ -399,6 +399,7 @@
 
         let replyToUser = null
         let lastAuthor = null
+        let lastTimestamp = null
 
 
         if ("{{ theme }}" === 'light') {
@@ -451,8 +452,7 @@
                     const data = JSON.parse(e.data)
                     switch (data.type) {
                         case 'message_sended':
-                            console.log(data)
-                            addMessage(data.avatar_url, data.author_username, data.time, data.message_content)
+                            addMessage(data.avatar_url, data.author_username, data.timestamp, data.message_content)
                             break
                     }
                 }
@@ -479,44 +479,45 @@
             }
         }
 
-        const addMessage = (avatar_url, author_username, time, content) => {
+        const addMessage = (avatar_url, author_username, timestamp, content) => {
             if (content) {
                 const chatMessages = document.getElementById('chat-messages')
+                const is_same_author = author_username === lastAuthor && lastAuthor !== null
+                const is_5min_later = lastTimestamp && ((timestamp - lastTimestamp)/60 > 5)
 
-                if (!avatar_url && !author_username && content) {
+                if (!avatar_url && !author_username && content) { // system message
                     const messageElement = document.createElement('div')
                     messageElement.classList.add('chat-message')
                     messageElement.innerHTML = `<div class="chat-content">${content}</div>`
                     chatMessages.appendChild(messageElement)
+                    return
+                } else if (is_same_author && !is_5min_later) { // Add to the last message group
+                    const lastMessage = chatMessages.lastElementChild.querySelector('.chat-content')
+                    const lastDivs = lastMessage.querySelectorAll('div')
+                    const lastDiv = lastDivs[lastDivs.length - 1]
 
-                } else {
-                    if (author_username === lastAuthor && lastAuthor !== null) {
-                        const lastMessage = chatMessages.lastElementChild.querySelector('.chat-content')
-                        const lastDivs = lastMessage.querySelectorAll('div')
-                        const lastDiv = lastDivs[lastDivs.length - 1]
-
-                        const newMessageText = document.createElement('span')
-                        newMessageText.classList.add('chat-text')
-                        newMessageText.innerText = content
-                        lastDiv.appendChild(newMessageText)
-                    } else {
-                        const messageElement = document.createElement('div')
-                        messageElement.classList.add('chat-message')
-                        messageElement.innerHTML = `
-                            <img src="${avatar_url}" alt="Аватар" class="chat-avatar">
-                            <div class="chat-content">
-                                <div>
-                                    <span class="chat-user">@${author_username}</span>
-                                    <span class="chat-time">${time}</span>
-                                    <button class="reply-button" onclick="replyToMessage('${author_username}')">Ответить</button>
-                                </div>
-                                <div class="message-group">
-                                    <span class="chat-text">${content}</span>
-                                </div>
+                    const newMessageText = document.createElement('span')
+                    newMessageText.classList.add('chat-text')
+                    newMessageText.innerText = content
+                    lastDiv.appendChild(newMessageText)
+                } else { // New message group
+                    const messageElement = document.createElement('div')
+                    messageElement.classList.add('chat-message')
+                    messageElement.innerHTML = `
+                        <img src="${avatar_url}" alt="Аватар" class="chat-avatar">
+                        <div class="chat-content">
+                            <div>
+                                <span class="chat-user">@${author_username}</span>
+                                <span class="chat-time">${formatTimestamp(timestamp)}</span>
+                                <button class="reply-button" onclick="replyToMessage('${author_username}')">Ответить</button>
                             </div>
-                        `
-                        chatMessages.appendChild(messageElement)
-                    }
+                            <div class="message-group">
+                                <span class="chat-text">${content}</span>
+                            </div>
+                        </div>
+                    `
+                    chatMessages.appendChild(messageElement)
+                    lastTimestamp = timestamp
                 }
 
                 while (chatMessages.children.length > 100) {
@@ -548,6 +549,23 @@
         const scroll_down = () => {
             const chatMessages = document.getElementById('chat-messages')
             chatMessages.scrollTop = chatMessages.scrollHeight
+        }
+
+        const formatTimestamp = (timestamp) => {
+            const date = new Date((timestamp - 3 * 60 * 60) * 1000)
+            const now = new Date()
+
+            const isToday = date.toDateString() === now.toDateString()
+            const isYesterday = new Date(now.setDate(now.getDate() - 1)).toDateString() === date.toDateString()
+
+            const options = { hour: '2-digit', minute: '2-digit' }
+            if (isToday) {
+                return `Сегодня, ${date.toLocaleTimeString([], options)}`
+            } else if (isYesterday) {
+                return `Вчера, ${date.toLocaleTimeString([], options)}`
+            } else {
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], options)
+            }
         }
 
         const replyToMessage = (name) => {

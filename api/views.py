@@ -13,6 +13,8 @@ def get_chat_msgs(request):
 	return HttpResponse('chat')
 def get_videos(request):
 	return HttpResponse('videos')
+def get_animes(request):
+	return HttpResponse('anime')
 
 @csrf_exempt
 def post_user_theme(request):

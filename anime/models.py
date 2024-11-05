@@ -28,7 +28,7 @@ class ModelUtils:
         return result_name
     
     def preview_filename(instance, filename: str) -> str:
-        return ModelUtils.filename(f'{settings.PREVIEW_URL}{filename}')
+        return ModelUtils.filename(f'{settings.PREVIEWS_URL}{filename}')
     
     def video_filename(instance, filename: str) -> str:
         return ModelUtils.filename(f'{settings.VIDEO_URL}{filename}')
@@ -38,7 +38,7 @@ class Anime(models.Model):
     rus_name = models.CharField(max_length=100, unique=True, default='')
     eng_name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(unique=True, blank=True)
-    preview = models.ImageField(upload_to=ModelUtils.preview_filename, verbose_name='Preview', default=settings.DEFAULT_PREVIEWS_URL)
+    preview = models.ImageField(upload_to=ModelUtils.preview_filename, verbose_name='Preview', default=settings.DEFAULT_PREVIEW_URL)
     release_date = models.DateTimeField(verbose_name='Create Time', default=tz.now)
     released = models.BooleanField(verbose_name='Is Released', default=False)
     views = models.PositiveBigIntegerField(verbose_name='Views Count', default=0)
@@ -47,10 +47,10 @@ class Anime(models.Model):
 
     def save(self, *args, **kwargs):
         if self.id:
-            old_user = User.objects.get(pk=self.id)
+            old_anime = Anime.objects.get(pk=self.id)
 
-            if self.preview and old_user.preview != self.preview:
-                old_user.preview.delete()
+            if self.id and self.preview and old_anime.preview != self.preview:
+                old_anime.preview.delete()
 
         self.slug = self.generate_slug()
 
@@ -92,13 +92,12 @@ class Season(models.Model):
         Episode.objects.create(**kwargs, number=self.episodes_count+1)
 
     def __str__(self):
-        return f'Season(anime={self.anime}, release_date={self.release_date}, number={self.number}, released={self.released})'
+        return f'Season(anime={self.anime.rus_name}, release_date={self.release_date}, number={self.number}, released={self.released})'
 
 class Episode(models.Model):
     eng_name = models.CharField(max_length=100)
     rus_name = models.CharField(max_length=100)
     season = models.ForeignKey(Season, related_name='episodes', verbose_name='Season', on_delete=models.CASCADE)
-    preview = models.ImageField(upload_to=ModelUtils.preview_filename, verbose_name='Preview')
     release_date = models.DateTimeField(verbose_name='Create Time', default=tz.now)
     released = models.BooleanField(verbose_name='Is Released', default=False)
     views = models.PositiveBigIntegerField(verbose_name='Views Count', default=0)
@@ -107,12 +106,12 @@ class Episode(models.Model):
 
     def save(self, *args, **kwargs):
         if self.id:
-            old_user = User.objects.get(pk=self.id)
+            old_epi = Episode.objects.get(pk=self.id)
 
-            if self.preview and old_user.preview != self.preview:
-                old_user.preview.delete()
+            if self.preview and old_epi.preview != self.preview:
+                old_epi.preview.delete()
 
-        super(Anime, self).save(*args, **kwargs)
+        super(Episode, self).save(*args, **kwargs)
 
     def __str__(self):
         return f'Episode(eng_name={self.eng_name}, release_date={self.release_date}, views={self.views}, released={self.released})'
@@ -120,7 +119,6 @@ class Episode(models.Model):
 class Dub(models.Model):
     author = models.CharField(max_length=100)
     episode = models.ForeignKey(Episode, related_name='dubs', verbose_name='Episode', on_delete=models.CASCADE)
-    preview = models.ImageField(upload_to=ModelUtils.preview_filename, verbose_name='Preview')
     date_loaded = models.DateTimeField(default=tz.now, verbose_name='Create Time')
     views = models.PositiveBigIntegerField(verbose_name='Views Count', default=0)
     viewers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='dubs_viewed', verbose_name='Viewers', blank=True)
@@ -133,15 +131,15 @@ class Dub(models.Model):
 
     def save(self, *args, **kwargs):
         if self.id:
-            old_user = User.objects.get(pk=self.id)
+            old_dub = Dub.objects.get(pk=self.id)
 
-            if self.preview and old_user.preview != self.preview:
-                old_user.preview.delete()
+            if self.preview and old_dub.preview != self.preview:
+                old_dub.preview.delete()
 
-        super(Anime, self).save(*args, **kwargs)
+        super(Dub, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'Dub(author={self.author}, date_loaded={self.date_loaded}, views={self.views}, episode={self.episode.name}, episode.anime={self.episode.anime.name})'
+        return f'Dub(author={self.author}, date_loaded={self.date_loaded}, views={self.views}, episode={self.episode.rus_name}, anime={self.episode.season.anime.rus_name})'
 
 class Grade(models.Model):
     anime = models.ForeignKey(Anime, related_name='grades', verbose_name='Anime', on_delete=models.CASCADE)

@@ -43,18 +43,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
                                 'message_data': {
                                     'type': 'message_sended',
                                     'author_username': self.user.username,
-                                    'time': str(created_at),
+                                    'timestamp': dt.timestamp(created_at),
                                     'avatar_url': self.user.avatar.url,
                                     'message_content': data['content'],
                                 },
                             }
                         )
                         try:
-                            print(1)
                             reply = None if not data['reply'] else await sync_to_async(User.objects.get)(username=data['reply'])
                             await sync_to_async(Message.objects.create)(author=self.user, content=data['content'], to=reply, created_at=created_at)
                         except User.DoesNotExist:
-                            print(data['reply'])
                             await self.send(text_data=json.dumps({
                                 'type': 'request error',
                                 'info': 'reply username dows not exists',
@@ -77,7 +75,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'type': 'message_sended',
                 'author_username': data.get('author_username'),
                 'avatar_url': data.get('avatar_url'),
-                'time': data.get('time'),
+                'timestamp': data.get('timestamp'),
                 'message_content': data.get('message_content'),
             }))
         elif isinstance(event, Message):
@@ -86,5 +84,5 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'author_username': await sync_to_async(lambda: event.author.username)(),
                 'avatar_url': await sync_to_async(lambda: event.author.avatar.url)(),
                 'message_content': await sync_to_async(lambda: event.content)(),
-                'time': str(await sync_to_async(lambda: event.created_at.strftime("%d.%m.%Y %H:%M:%S"))()),
+                'timestamp': dt.timestamp(await sync_to_async(lambda: event.created_at)()),
             }))

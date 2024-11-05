@@ -125,9 +125,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -149,11 +149,11 @@ MIN_CHAT_MSGS_LOAD = 100
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-AVATARS_URL = '/avatars/'
+AVATARS_URL = 'avatars/'
 AVATARS_ROOT = os.path.join(MEDIA_ROOT, 'avatars')
-PREVIEWS_URL = '/previews/'
+PREVIEWS_URL = 'previews/'
 PREVIEWS_ROOT = os.path.join(MEDIA_ROOT, 'previews')
-VIDEOS_URL = '/videos/'
+VIDEOS_URL = 'videos/'
 VIDEOS_ROOT = os.path.join(MEDIA_ROOT, 'videos')
 
 DEFAULT_AVATAR_NAME = 'default_user.png'
@@ -161,7 +161,7 @@ DEFAULT_AVATAR_URL = f'{AVATARS_URL}{DEFAULT_AVATAR_NAME}'
 DEFAULT_AVATAR_ROOT = os.path.join(AVATARS_ROOT, DEFAULT_AVATAR_NAME)
 
 DEFAULT_PREVIEW_NAME = 'default_preview.png'
-DEFAULT_PREVIEWS_URL = f'{PREVIEWS_URL}{DEFAULT_PREVIEW_NAME}'
+DEFAULT_PREVIEW_URL = f'{PREVIEWS_URL}{DEFAULT_PREVIEW_NAME}'
 DEFAULT_PREVIEW_ROOT = os.path.join(PREVIEWS_ROOT, DEFAULT_PREVIEW_NAME)
 
 
